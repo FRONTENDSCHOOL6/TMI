@@ -5,10 +5,13 @@ import 'swiper/css/pagination';
 import { A11y } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import './swiper-bundle.css';
+import useUserStore from '@/store/bodyStyle';
 
 function MypageSievingSlide() {
+  const setSieving = useUserStore((store) => store.setSieving);
   const handleSievingClick = async (value) => {
     setData('userSievingValue', value);
+    setSieving(value);
   };
 
   return (

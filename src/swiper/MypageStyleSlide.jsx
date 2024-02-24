@@ -1,10 +1,13 @@
 import { getData, setData } from '@/hooks/useStorage';
+import useUserStore from '@/store/bodyStyle';
 import 'swiper/css';
 import { A11y, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import './swiper-bundle.css';
 
 function MypageStyleSlide() {
+  const setStyle = useUserStore((store) => store.setStyle);
+
   const handleStyleClick = (value) => {
     const storedUserStyleValue = getData('userStyleValue');
 
@@ -14,8 +17,10 @@ function MypageStyleSlide() {
 
     if (!parsedStoredUserStyleValue.has(value)) {
       parsedStoredUserStyleValue.add(value);
+
       setData('userStyleValue', Array.from(parsedStoredUserStyleValue));
     }
+    setStyle(Array.from(parsedStoredUserStyleValue));
   };
 
   const styles = [
@@ -30,6 +35,7 @@ function MypageStyleSlide() {
     { label: '도시남자 스타일', value: 'cityboy' },
     { label: '애슬레저 스타일', value: 'athleisure' },
   ];
+
   return (
     <Swiper
       modules={[Navigation, A11y]}

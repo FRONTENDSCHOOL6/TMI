@@ -5,10 +5,14 @@ import 'swiper/css/pagination';
 import { A11y, Navigation } from 'swiper/modules';
 import { Swiper, SwiperSlide } from 'swiper/react';
 import './swiper-bundle.css';
+import useUserStore from '@/store/bodyStyle';
 
 function MypageSievingSlide() {
+  const setBodyType = useUserStore((store) => store.setBodyType);
+
   const handleBodyTypeClick = async (value) => {
     setData('userBodyTypeValue', value);
+    setBodyType(value);
   };
 
   return (

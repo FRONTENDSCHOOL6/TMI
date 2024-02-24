@@ -1,18 +1,20 @@
-import pb from '@/api/pocketbase';
 import { MypageIcon } from '@/assets/MypageIcon';
 import Loading from '@/components/Loading/Loading';
 import MyItem from '@/components/MyItem/MyItem';
 import UserProfilePicture from '@/components/UserProfilePicture/UserProfilePicture';
-import useStorage, { getData } from '@/hooks/useStorage';
+import { deleteData, getData } from '@/hooks/useStorage';
+import useAuthStore from '@/store/auth';
 import MypageBodyTypeSlide from '@/swiper/MypageBodyTypeSlide';
 import MypageSievingSlide from '@/swiper/MypageSievingSlide';
 import MypageStyleSlide from '@/swiper/MypageStyleSlide';
 import { useQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import GuestSetting from '../GuestSetting';
 import S from './Mypage.module.css';
+import useUserStore from '@/store/bodyStyle';
 
 const PB = import.meta.env.VITE_PB_URL;
 const PB_FEED_ENDPOINT = `${PB}/api/collections/posts/records?expand=user`;
@@ -23,28 +25,21 @@ async function fetchProducts() {
 }
 
 function Mypage() {
-  // const {
-  //   storedUserSievingValue,
-  //   storedUserStyleValue,
-  //   storedBodyTypeValue,
-  //   isDisabled,
-  //   updateIsDisabled,
-  // } = useBodyTypeStore();
-
   const { userId } = useParams();
+  const navigate = useNavigate();
 
+  const signOut = useAuthStore((store) => store.signOut);
+  const checkLogIn = useAuthStore((store) => store.checkLogIn);
+  const user = useAuthStore((store) => store.user);
+
+  const updateUser = useUserStore((store) => store.updateUserStyle);
+
+  const userBodyStyle = useUserStore((store) => store);
+  const [authUserData, setAuthUserData] = useState(user);
   const [showPosts, setShowPosts] = useState(true);
   const [showSettings, setShowSettings] = useState(false);
-
   const [isDarkMode, setIsDarkMode] = useState(false);
-
-  const { storageData } = useStorage('pocketbase_auth');
-  const [authUserData, setAuthUserData] = useState(storageData?.model);
   const [isDisabled, setIsDisabled] = useState(true);
-
-  useEffect(() => {
-    setAuthUserData(storageData?.model);
-  }, [storageData]);
 
   function toggleDarkModeHandler() {
     setIsDarkMode((prevMode) => !prevMode);
@@ -68,30 +63,37 @@ function Mypage() {
   const storedBodyTypeValue = getData('userBodyTypeValue');
 
   const handleSaveClick = async () => {
-    await pb.collection('users').update(userId, {
-      sieving:
-        storedUserSievingValue !== null
-          ? storedUserSievingValue
-          : authUserData?.sieving,
-      style:
-        storedUserStyleValue !== null
-          ? storedUserStyleValue
-          : authUserData?.style,
-      bodyType:
-        storedBodyTypeValue !== null
-          ? storedBodyTypeValue
-          : authUserData?.bodyType,
-    });
+    try {
+      await updateUser(userId, authUserData);
+
+      toast.success('정보가 수정되었습니다.');
+      deleteData('userBodyTypeValue');
+      deleteData('userSievingValue');
+      deleteData('userStyleValue');
+      navigate('/');
+    } catch (error) {
+      toast.error(error);
+    }
   };
 
-  // useEffect(() => {
-  //   updateIsDisabled();
-  // }, [
-  //   storedUserSievingValue,
-  //   storedUserStyleValue,
-  //   storedBodyTypeValue,
-  //   updateIsDisabled,
-  // ]);
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      localStorage.clear();
+      toast.success('로그아웃되었습니다.');
+      window.location.reload();
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  useEffect(() => {
+    checkLogIn();
+  }, [checkLogIn]);
+
+  useEffect(() => {
+    setAuthUserData(user);
+  }, [user]);
 
   useEffect(() => {
     if (storedUserSievingValue || storedUserStyleValue || storedBodyTypeValue) {
@@ -99,7 +101,12 @@ function Mypage() {
     } else {
       setIsDisabled(true);
     }
-  }, [storedUserSievingValue, storedUserStyleValue, storedBodyTypeValue]);
+  }, [
+    storedUserSievingValue,
+    storedUserStyleValue,
+    storedBodyTypeValue,
+    userBodyStyle,
+  ]);
 
   if (isLoading) return <Loading />;
 
@@ -166,7 +173,7 @@ function Mypage() {
         </div>
       )}
       {showSettings && (
-        <div className="flex flex-col p-8 overflow-y-scroll min-w-[320px]">
+        <section className="flex flex-col p-8 overflow-y-scroll min-w-[320px]">
           <div className="flex flex-col items-center">
             <div className="w-full flex justify-between">
               <span className="w-[5.25rem] h-[2.75rem] flex justify-center items-center rounded-3xl bg-black text-white mb-[1.6rem] font-bold">
@@ -180,27 +187,34 @@ function Mypage() {
               </div>
             </div>
             <div className={`${S.bodyTypeWrapper}`}>
-              <MypageStyleSlide item={userId} />
+              <MypageStyleSlide />
             </div>
             <div className={`${S.bodyTypeWrapper} gap-2`}>
               <span className={S.bodyType}>체질</span>
-              <MypageSievingSlide item={userId} />
+              <MypageSievingSlide />
             </div>
             <div className={`${S.bodyTypeWrapper} flex-nowrap gap-2`}>
               <span className={S.bodyType}>체형</span>
-              <MypageBodyTypeSlide item={userId} />
+              <MypageBodyTypeSlide />
             </div>
             <button
               className={`w-[17.5rem] h-[3.375rem] flex justify-center items-center rounded-md ${
                 isDisabled ? 'bg-gray-700 text-white' : 'bg-primary'
               }`}
-              onClick={() => handleSaveClick()}
+              onClick={handleSaveClick}
               disabled={isDisabled}
             >
               저장하기
             </button>
           </div>
-        </div>
+          <button
+            type="button"
+            className="underline text-gray750"
+            onClick={handleLogout}
+          >
+            로그아웃
+          </button>
+        </section>
       )}
     </div>
   );

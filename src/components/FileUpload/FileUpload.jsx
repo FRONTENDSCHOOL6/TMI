@@ -1,5 +1,5 @@
 import pb from '@/api/pocketbase';
-import useStorage from '@/hooks/useStorage';
+import useAuthStore from '@/store/auth';
 import { getNextSlideIndex, getPreviousSlideIndex } from '@/utils';
 import debounce from '@/utils/debounce';
 import { useRef, useState } from 'react';
@@ -12,8 +12,7 @@ import photoIcon from '/photoIcon.svg';
 
 function FileUpload() {
   const navigate = useNavigate();
-  const { storageData } = useStorage('pocketbase_auth');
-  const authUser = storageData?.model;
+  const authUser = useAuthStore((store) => store.user);
   const contentRef = useRef(null);
   const formRef = useRef(null);
   const photoRef = useRef(null);

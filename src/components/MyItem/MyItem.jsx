@@ -1,18 +1,16 @@
-import useStorage from '@/hooks/useStorage';
 import { Link } from 'react-router-dom';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import { getPbImageURL } from '@/utils';
 import S from './MyItem.module.css';
+import useAuthStore from '@/store/auth';
 
 function MyItem({ item }) {
-  const { storageData } = useStorage('pocketbase_auth');
-  const [token, setToken] = useState(storageData?.token);
-  const [authUserData, setAuthUserData] = useState(storageData?.model);
+  const { user, token } = useAuthStore((store) => store);
+  const [authUserData, setAuthUserData] = useState(user);
   useEffect(() => {
-    setToken(storageData?.token);
-    setAuthUserData(storageData?.model);
-  });
+    setAuthUserData(user);
+  }, [user]);
 
   const authUserDataId = authUserData?.id;
 

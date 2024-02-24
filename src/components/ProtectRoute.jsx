@@ -1,4 +1,4 @@
-import useStorage from '@/hooks/useStorage';
+import useAuthStore from '@/store/auth';
 import { element } from 'prop-types';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -7,12 +7,17 @@ import Spinner from './Spinner';
 
 function ProtectRoute({ children }) {
   const navigate = useNavigate();
-  const { storageData } = useStorage('pocketbase_auth');
-  const authUser = storageData?.token;
+  const checkLogIn = useAuthStore((store) => store.checkLogIn);
+  const token = useAuthStore((store) => store.token);
+  const authUser = token;
 
   const { pathname, search, hash } = useLocation();
   const [isLoading, setIsLoading] = useState(true);
   const wishLocationPath = `${pathname}${search}${hash}`;
+
+  useEffect(() => {
+    checkLogIn();
+  }, [checkLogIn]);
 
   useEffect(() => {
     if (!isLoading && !authUser) {

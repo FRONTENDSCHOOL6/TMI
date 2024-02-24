@@ -1,4 +1,5 @@
 import pb from '@/api/pocketbase';
+import { getData } from '@/hooks/useStorage';
 import { create } from 'zustand';
 
 const initialAuthState = {
@@ -54,6 +55,20 @@ const useAuthStore = create((set) => ({
     } catch (error) {
       console.error(error);
       throw new Error('회원 탈퇴에 실패했습니다. 다시 시도해주세요.');
+    }
+  },
+
+  checkLogIn: () => {
+    // 컴포넌트가 렌더링 된 후, authUserData가 비어있는지 체크
+    // localStorage 확인해서 업데이트
+    try {
+      const { model, token } = getData('pocketbase_auth');
+
+      if (model) {
+        set({ isAuth: true, user: model, token: token });
+      }
+    } catch (error) {
+      console.log(error);
     }
   },
 }));

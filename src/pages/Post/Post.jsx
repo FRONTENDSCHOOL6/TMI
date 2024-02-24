@@ -5,14 +5,14 @@ import MoveSlide from '@/components/MoveSlide/MoveSlide';
 import SpeechBubble from '@/components/SpeechBubble/SpeechBubble';
 import { useCommentsMutation } from '@/hooks/useCommentsMutation';
 import { usePostQuery } from '@/hooks/usePostQuery';
-import useStorage from '@/hooks/useStorage';
+import useAuthStore from '@/store/auth';
 import {
   formatDate,
   getNextSlideIndex,
   getPbImageURL,
   getPreviousSlideIndex,
 } from '@/utils';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Link, useParams } from 'react-router-dom';
 import S from './Post.module.css';
@@ -23,9 +23,9 @@ function Post() {
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [likePost, setLikePost] = useState(true);
-  const { storageData } = useStorage('pocketbase_auth');
+  const checkLogIn = useAuthStore((store) => store.checkLogIn);
+  const authUser = useAuthStore((store) => store.user);
   const [formInputValue, setFormInputValue] = useState('');
-  const authUser = storageData?.model;
 
   const { data: postInfo, error, isLoading } = usePostQuery(postId);
   const { mutate } = useCommentsMutation(() => setFormInputValue(''));
@@ -84,6 +84,8 @@ function Post() {
   const handleLikePost = () => {
     setLikePost(!likePost);
   };
+
+  useEffect(() => checkLogIn(), [checkLogIn]);
 
   if (isLoading) {
     return <Loading />;

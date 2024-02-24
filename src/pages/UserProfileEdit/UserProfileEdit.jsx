@@ -2,12 +2,12 @@ import pb from '@/api/pocketbase';
 import ProfileUpload from '@/components/ProfileUpload/ProfileUpload';
 import UserProfilePicture from '@/components/UserProfilePicture/UserProfilePicture';
 import useFetchData from '@/hooks/useFetchData';
-import { getData } from '@/hooks/useStorage';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
-import S from './UserProfileEdit.module.css';
+import style from './UserProfileEdit.module.css';
+import useAuthStore from '@/store/auth';
 
 const PB = import.meta.env.VITE_PB_URL;
 const PB_USER_ENDPOINT = `${PB}/api/collections/users/records`;
@@ -18,8 +18,9 @@ function UserProfileEdit() {
   const { data: userData, isLoading } = useFetchData(PB_USER_ENDPOINT);
   const [nickname, setNickname] = useState('');
   const [validationResult, setValidationResult] = useState('');
-  const [usernames, setUsername] = useState([]);
-  const pocketbaseAuthData = getData('pocketbase_auth');
+  const [usernameList, setUserNameList] = useState([]);
+  const user = useAuthStore((store) => store.user);
+  const checkLogIn = useAuthStore((store) => store.checkLogIn);
 
   const handleCheckDuplicate = () => {
     if (isLoading) {
@@ -31,7 +32,7 @@ function UserProfileEdit() {
       nickname.length <= 10 &&
       /^[a-zA-Z0-9]+$/.test(nickname)
     ) {
-      const isDuplicate = usernames.includes(nickname.toLowerCase());
+      const isDuplicate = usernameList.includes(nickname.toLowerCase());
 
       if (isDuplicate) {
         setValidationResult('중복된 닉네임입니다.');
@@ -95,29 +96,30 @@ function UserProfileEdit() {
     }
   }
 
-  const username =
-    pocketbaseAuthData?.model?.username || '사용자 이름이 없습니다';
+  const username = user?.username || '사용자 이름이 없습니다';
+
+  useEffect(() => checkLogIn(), [checkLogIn]);
 
   useEffect(() => {
     if (userData.items) {
-      const usernames = userData.items.map((user) =>
+      const usernameList = userData.items.map((user) =>
         user.username.toLowerCase()
       );
-      setUsername(usernames);
+      setUserNameList(usernameList);
     }
   }, [userData.items]);
 
-  if (!pocketbaseAuthData) {
+  if (!user) {
     return null;
   }
 
   return (
-    <div className={S.profile}>
-      <UserProfilePicture avatar={pocketbaseAuthData?.model} />
+    <div className={style.profile}>
+      <UserProfilePicture avatar={user} />
       <div className="h-[90px] flex">
         <span className="mt-5 text-xl font-semibold">{username}</span>
       </div>
-      <div className={S.editwrapper} />
+      <div className={style.editwrapper} />
       <div className="flex flex-col gap-6 mt-10">
         <NicknameInputSection
           nickname={nickname}
@@ -130,7 +132,7 @@ function UserProfileEdit() {
       </div>
       <button
         onClick={handleSaveButtonClick}
-        className={`${S.save} ${
+        className={`${style.save} ${
           isSaveButtonDisabled ? 'bg-gray-300' : 'bg-primary'
         }`}
         disabled={isSaveButtonDisabled}
@@ -160,7 +162,7 @@ function NicknameInputSection({
             id="nickname"
             name="nickname"
             placeholder="5 ~ 10문자(특수문자 사용불가)"
-            className={S.nick}
+            className={style.nick}
             value={nickname}
             onChange={(e) => handleNicknameChange(e.target.value)}
           />
