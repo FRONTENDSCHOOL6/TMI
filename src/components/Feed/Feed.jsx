@@ -13,9 +13,9 @@ const PB_FEED_ENDPOINT = `${PB}/api/collections/posts/records?sort=-created&expa
 function getItemsPerPage() {
   const width = window.innerWidth;
   if (width <= 768) {
-    return 12;
+    return 18;
   } else {
-    return 16;
+    return 24;
   }
 }
 
