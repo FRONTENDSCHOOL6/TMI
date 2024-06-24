@@ -1,3 +1,4 @@
+import useAuthStore from '@/store/auth';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import axios from 'axios';
 import { useEffect } from 'react';
@@ -28,6 +29,8 @@ async function fetchProducts({ pageParam = 1 }) {
 }
 
 function Feed() {
+  const checkLogIn = useAuthStore((store) => store.checkLogIn);
+
   const {
     data: postData,
     hasNextPage,
@@ -56,6 +59,10 @@ function Feed() {
       fetchNextPage();
     }
   }, [inView]);
+
+  useEffect(() => {
+    checkLogIn();
+  }, [checkLogIn]);
 
   return (
     <div>

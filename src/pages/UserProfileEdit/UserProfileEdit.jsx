@@ -2,12 +2,12 @@ import pb from '@/api/pocketbase';
 import ProfileUpload from '@/components/ProfileUpload/ProfileUpload';
 import UserProfilePicture from '@/components/UserProfilePicture/UserProfilePicture';
 import useFetchData from '@/hooks/useFetchData';
+import useAuthStore from '@/store/auth';
 import PropTypes from 'prop-types';
 import { useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { useNavigate, useParams } from 'react-router-dom';
 import style from './UserProfileEdit.module.css';
-import useAuthStore from '@/store/auth';
 
 const PB = import.meta.env.VITE_PB_URL;
 const PB_USER_ENDPOINT = `${PB}/api/collections/users/records`;
